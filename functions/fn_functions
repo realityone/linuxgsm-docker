@@ -12,6 +12,11 @@ functionfile="${FUNCNAME}"
 fn_runfunction
 }
 
+fn_check_error(){
+functionfile="${FUNCNAME}"
+fn_runfunction
+}
+
 fn_check_ip(){
 functionfile="${FUNCNAME}"
 fn_runfunction
