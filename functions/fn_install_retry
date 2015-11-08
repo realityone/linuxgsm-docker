@@ -2,12 +2,11 @@
 # LGSM fn_install_retry function
 # Author: Daniel Gibbs
 # Website: http://gameservermanagers.com
-# Version: 210115
+# Version: 061115
 lgsm_version="061115"
 
-
 while true; do
-	read -p "Retry install? [y/N]" yn
+	read -e -i "y" -p "Retry install? [Y/n]" yn
 	case $yn in
 	[Yy]* ) fn_install; exit;;
 	[Nn]* ) echo Exiting; exit;;
