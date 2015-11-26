@@ -23,10 +23,11 @@ RUN wget http://gameservermanagers.com/dl/tf2server && \
 
 RUN ./tf2server auto-install
 
-# Default command
-ENTRYPOINT ["./tf2server", "start"]
-
 # Expose port
 # - 27015: Port to serve on
 EXPOSE 27015/tcp
 EXPOSE 27015/udp
+
+# Default command
+ENTRYPOINT ["./tf2server"]
+CMD ["start"]
