@@ -35,7 +35,7 @@ def main():
 
     if SERVER_TOKEN:
         config.set('account', 'dedicated_lan_server', 'false')
-        with open(SERVER_TOKEN, 'wb') as token_file:
+        with open(TOKEN_FILE, 'wb') as token_file:
             token_file.write(token_file)
     else:
         config.set('account', 'dedicated_lan_server', 'true')
