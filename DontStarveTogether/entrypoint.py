@@ -34,11 +34,11 @@ def main():
         config.readfp(config_file)
 
     if SERVER_TOKEN:
-        config.set('account', 'dedicated_lan_server', 'true')
+        config.set('account', 'dedicated_lan_server', 'false')
         with open(SERVER_TOKEN, 'wb') as token_file:
             token_file.write(token_file)
     else:
-        config.set('account', 'dedicated_lan_server', 'false')
+        config.set('account', 'dedicated_lan_server', 'true')
 
     config.set('network', 'default_server_name', SERVER_NAME)
     config.set('network', 'default_server_description', SERVER_DESCRIPTION)
