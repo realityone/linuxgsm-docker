@@ -9,18 +9,20 @@ SETTING_DIRECTORY = os.path.join(HOME, '.klei', GAME)
 
 SETTING_FILE = os.path.join(SETTING_DIRECTORY, 'settings.ini')
 TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'server_token.txt')
-
 MANAGER_FILE = os.path.join(HOME, 'dstserver')
 BIN_DIRECTORY = os.path.join(HOME, 'serverfiles', 'bin')
-BIN_FILE = os.path.join(BIN_DIRECTORY, 'dontstarve_dedicated_server_nullrenderer')
+BIN_FILE = os.path.join(
+    BIN_DIRECTORY, 'dontstarve_dedicated_server_nullrenderer'
+)
 
 SERVER_TOKEN = os.environ.get('SERVER_TOKEN')
 SERVER_NAME = os.environ.get('SERVER_NAME', 'Do Not Starve Together')
-SERVER_DESCRIPTION = os.environ.get('SERVER_DESCRIPTION', 'Welcome to %s' % SERVER_NAME)
-SERVER_PASSWORD = os.environ.get('SERVER_PASSWORD', os.urandom(4).encode('hex'))
-
-
-print 'Your world\'s password is %s' % SERVER_PASSWORD
+SERVER_DESCRIPTION = os.environ.get(
+    'SERVER_DESCRIPTION', 'Welcome to %s' % SERVER_NAME
+)
+SERVER_PASSWORD = os.environ.get(
+    'SERVER_PASSWORD', os.urandom(4).encode('hex')
+)
 
 
 def prepare_game():
@@ -29,7 +31,7 @@ def prepare_game():
 
 def main():
     config = ConfigParser.ConfigParser()
-    
+
     with open(SETTING_FILE, 'rb') as config_file:
         config.readfp(config_file)
 
@@ -47,6 +49,7 @@ def main():
     with open(SETTING_FILE, 'wb') as config_file:
         config.write(config_file)
 
+    print 'Your world\'s password is %s' % SERVER_PASSWORD
     subprocess.call([BIN_FILE], cwd=BIN_DIRECTORY)
 
 
