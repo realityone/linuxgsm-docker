@@ -19,15 +19,20 @@ WORKDIR /home/dstserver
 
 USER dstserver
 
-ADD ./entrypoint.py entrypoint.py
-
 # Install DST Server
 RUN wget http://gameservermanagers.com/dl/dstserver && \
   	chmod +x dstserver
+
+ADD ./entrypoint.py entrypoint.py
 
 # Expose port
 # - 10999: Port to serve on
 EXPOSE 10999/udp
 
+USER root
+RUN chmod +x entrypoint.py
+
+VOLUME ['/save']
+
 # Default command
-ENTRYPOINT ["python", "./entrypoint.py"]
+ENTRYPOINT ["./entrypoint.py"]
