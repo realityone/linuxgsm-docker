@@ -112,7 +112,7 @@ def prepare_volume():
         subprocess.call(['ln', '-s', VOLUME_PATH, KLEI_DIRECTORY])
         subprocess.call(['chown', '-hR', '%s:%s' % (USER, GROUP), VOLUME_PATH])
     else:
-        logging.warnings('No Volume found, maybe you will lose your all data.')
+        logging.warning('No Volume found, maybe you will lose your all data.')
 
 
 def prepare_game():
