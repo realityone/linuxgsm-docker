@@ -32,7 +32,5 @@ EXPOSE 10999/udp
 USER root
 RUN chmod +x entrypoint.py
 
-VOLUME ['/save']
-
 # Default command
 ENTRYPOINT ["./entrypoint.py"]
