@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 import os
+import pwd
+import grp
+import logging
+import getpass
 import subprocess
 import ConfigParser
 
 GAME = 'DoNotStarveTogether'
-HOME = os.path.expanduser('~')
-SETTING_DIRECTORY = os.path.join(HOME, '.klei', GAME)
+USER = 'dstserver'
+GROUP = 'dstserver'
+VOLUME_PATH = '/save'
+HOME = os.path.expanduser('~%s' % USER)
+KLEI_DIRECTORY = os.path.join(HOME, '.klei')
+SETTING_DIRECTORY = os.path.join(KLEI_DIRECTORY, GAME)
 
 SETTING_FILE = os.path.join(SETTING_DIRECTORY, 'settings.ini')
 TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'server_token.txt')
@@ -15,44 +23,125 @@ BIN_FILE = os.path.join(
     BIN_DIRECTORY, 'dontstarve_dedicated_server_nullrenderer'
 )
 
-SERVER_TOKEN = os.environ.get('SERVER_TOKEN')
-SERVER_NAME = os.environ.get('SERVER_NAME', 'Do Not Starve Together')
-SERVER_DESCRIPTION = os.environ.get(
-    'SERVER_DESCRIPTION', 'Welcome to %s' % SERVER_NAME
-)
-SERVER_PASSWORD = os.environ.get(
-    'SERVER_PASSWORD', os.urandom(4).encode('hex')
-)
+
+class NotRoot(Exception):
+    pass
+
+
+class DontStarveTogetherConfig(object):
+
+    SERVER_TOKEN = os.environ.get('SERVER_TOKEN')
+
+    CONFIGS = {
+        'network': [
+            'default_server_name',
+            'default_server_description',
+            # 'server_password',
+            'max_players',
+            'pvp',
+            'game_mode',
+            'enable_autosaver',
+            'tick_rate',
+            'connection_timeout',
+            'server_save_slot',
+            'enable_vote_kick',
+            'pause_when_empty'
+        ],
+        'account': [
+            # 'dedicated_lan_server'
+        ],
+        'STEAM': [
+            'DISABLECLOUD'
+        ],
+        'MISC': [
+            'CONSOLE_ENABLED',
+            'autocompiler_enabled'
+        ]
+    }
+
+    def __init__(self, setting_file, token_file):
+        super(DontStarveTogetherConfig, self).__init__()
+        self.setting_file = setting_file
+        self.token_file = token_file
+        self.config = ConfigParser.ConfigParser()
+
+        with open(self.setting_file, 'rb') as config_file:
+            self.config.readfp(config_file)
+
+    def get_password(self):
+        return os.environ.get('SERVER_PASSWORD')
+
+    def do_config(self):
+        for section, options in self.CONFIGS.iteritems():
+            for o in options:
+                name = o.upper()
+                if name in os.environ:
+                    self.config.set(section, o, os.environ[name])
+
+        password = self.get_password()
+        if password:
+            logging.info('Your world\'s password is %s.' % password)
+            self.config.set('network', 'server_password', password)
+        else:
+            logging.error(
+                'No password setted, everyone can access your world.'
+            )
+            self.config.remove_option('network', 'server_password')
+
+        if self.SERVER_TOKEN:
+            self.config.set('account', 'dedicated_lan_server', 'false')
+            with open(self.token_file, 'wb') as token_file:
+                token_file.write(self.SERVER_TOKEN)
+        else:
+            self.config.set('account', 'dedicated_lan_server', 'true')
+
+        with open(self.setting_file, 'wb') as config_file:
+            self.config.write(config_file)
+
+
+def _switch_to_user(user, group):
+    uid, gid = pwd.getpwnam(user).pw_uid, grp.getgrnam(group).gr_gid
+    os.setgid(gid)
+    os.setuid(uid)
+    os.environ['HOME'] = os.path.expanduser('~%s' % user)
+    return uid, gid
+
+
+def prepare_volume():
+    if os.path.exists(VOLUME_PATH):
+        subprocess.call(['ln', '-s', VOLUME_PATH, KLEI_DIRECTORY])
+        subprocess.call(['chown', '-hR', '%s:%s' % (USER, GROUP), VOLUME_PATH])
+    else:
+        logging.warnings('No Volume found, maybe you will lose your all data.')
 
 
 def prepare_game():
     subprocess.call([MANAGER_FILE, 'auto-install'])
 
 
-def main():
-    config = ConfigParser.ConfigParser()
+def game_start():
+    config = DontStarveTogetherConfig(SETTING_FILE, TOKEN_FILE)
+    config.do_config()
 
-    with open(SETTING_FILE, 'rb') as config_file:
-        config.readfp(config_file)
-
-    if SERVER_TOKEN:
-        config.set('account', 'dedicated_lan_server', 'false')
-        with open(TOKEN_FILE, 'wb') as token_file:
-            token_file.write(SERVER_TOKEN)
-    else:
-        config.set('account', 'dedicated_lan_server', 'true')
-
-    config.set('network', 'default_server_name', SERVER_NAME)
-    config.set('network', 'default_server_description', SERVER_DESCRIPTION)
-    config.set('network', 'server_password', SERVER_PASSWORD)
-
-    with open(SETTING_FILE, 'wb') as config_file:
-        config.write(config_file)
-
-    print 'Your world\'s password is %s' % SERVER_PASSWORD
     subprocess.call([BIN_FILE], cwd=BIN_DIRECTORY)
 
 
+def main():
+    if getpass.getuser() != 'root':
+        raise NotRoot('This script should be run as root.')
+
+    prepare_volume()
+
+    pid = os.fork()
+    if pid == 0:
+        # child process
+        _switch_to_user(USER, GROUP)
+
+        prepare_game()
+        game_start()
+    else:
+        os.waitpid(pid, 0)
+
+
 if __name__ == '__main__':
-    prepare_game()
     main()
