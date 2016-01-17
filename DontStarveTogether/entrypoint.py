@@ -16,7 +16,6 @@ KLEI_DIRECTORY = os.path.join(HOME, '.klei')
 SETTING_DIRECTORY = os.path.join(KLEI_DIRECTORY, GAME)
 
 SETTING_FILE = os.path.join(SETTING_DIRECTORY, 'settings.ini')
-TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'server_token.txt')
 MANAGER_FILE = os.path.join(HOME, 'dstserver')
 BIN_DIRECTORY = os.path.join(HOME, 'serverfiles', 'bin')
 BIN_FILE = os.path.join(
@@ -30,17 +29,18 @@ class NotRoot(Exception):
 
 class DontStarveTogetherConfig(object):
 
-    SERVER_TOKEN = os.environ.get('SERVER_TOKEN')
-
     CONFIGS = {
         'network': [
             'default_server_name',
             'default_server_description',
+            # 'server_port',
             # 'server_password',
             'max_players',
             'pvp',
             'game_mode',
+            'server_intention',
             'enable_autosaver',
+            'enable_snapshots',
             'tick_rate',
             'connection_timeout',
             'server_save_slot',
@@ -48,6 +48,7 @@ class DontStarveTogetherConfig(object):
             'pause_when_empty'
         ],
         'account': [
+            'server_token'
             # 'dedicated_lan_server'
         ],
         'STEAM': [
@@ -59,10 +60,9 @@ class DontStarveTogetherConfig(object):
         ]
     }
 
-    def __init__(self, setting_file, token_file):
+    def __init__(self, setting_file):
         super(DontStarveTogetherConfig, self).__init__()
         self.setting_file = setting_file
-        self.token_file = token_file
         self.config = ConfigParser.ConfigParser()
 
         with open(self.setting_file, 'rb') as config_file:
@@ -70,6 +70,9 @@ class DontStarveTogetherConfig(object):
 
     def get_password(self):
         return os.environ.get('SERVER_PASSWORD')
+
+    def get_server_token(self):
+        return os.environ.get('SERVER_TOKEN')
 
     def do_config(self):
         for section, options in self.CONFIGS.iteritems():
@@ -88,10 +91,8 @@ class DontStarveTogetherConfig(object):
             )
             self.config.remove_option('network', 'server_password')
 
-        if self.SERVER_TOKEN:
+        if self.get_server_token():
             self.config.set('account', 'dedicated_lan_server', 'false')
-            with open(self.token_file, 'wb') as token_file:
-                token_file.write(self.SERVER_TOKEN)
         else:
             self.config.set('account', 'dedicated_lan_server', 'true')
 
@@ -109,7 +110,7 @@ def _switch_to_user(user, group):
 
 def prepare_volume():
     if os.path.exists(VOLUME_PATH):
-        subprocess.call(['ln', '-s', VOLUME_PATH, KLEI_DIRECTORY])
+        subprocess.call(['ln', '-s', VOLUME_PATH, '-T', KLEI_DIRECTORY])
         subprocess.call(['chown', '-hR', '%s:%s' % (USER, GROUP), VOLUME_PATH])
     else:
         logging.warning('No Volume found, maybe you will lose your all data.')
@@ -120,7 +121,7 @@ def prepare_game():
 
 
 def game_start():
-    config = DontStarveTogetherConfig(SETTING_FILE, TOKEN_FILE)
+    config = DontStarveTogetherConfig(SETTING_FILE)
     config.do_config()
 
     subprocess.call([BIN_FILE], cwd=BIN_DIRECTORY)
