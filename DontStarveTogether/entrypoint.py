@@ -110,7 +110,7 @@ def _switch_to_user(user, group):
 
 def prepare_volume():
     if os.path.exists(VOLUME_PATH):
-        subprocess.call(['ln', '-s', VOLUME_PATH, KLEI_DIRECTORY])
+        subprocess.call(['ln', '-s', VOLUME_PATH, '-T', KLEI_DIRECTORY])
         subprocess.call(['chown', '-hR', '%s:%s' % (USER, GROUP), VOLUME_PATH])
     else:
         logging.warning('No Volume found, maybe you will lose your all data.')
