@@ -91,7 +91,7 @@ dstserver:
     - DEFAULT_SERVER_DESCRIPTION=DaoCloud's World Run In Docker
     - GAME_MODE=survival
   ports: 
-    - "10999:10999"
+    - "10999:10999/udp"
   volumes:
     - /opt/dstserver:/save
   restart: always
