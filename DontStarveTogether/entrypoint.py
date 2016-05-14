@@ -16,7 +16,7 @@ KLEI_DIRECTORY = os.path.join(HOME, '.klei')
 SETTING_DIRECTORY = os.path.join(KLEI_DIRECTORY, GAME)
 
 SETTING_FILE = os.path.join(SETTING_DIRECTORY, 'settings.ini')
-SERVER_TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'server_token.ini')
+CLUSTER_TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'cluster_token.txt')
 MANAGER_FILE = os.path.join(HOME, 'dstserver')
 BIN_DIRECTORY = os.path.join(HOME, 'serverfiles', 'bin')
 BIN_FILE = os.path.join(
@@ -61,10 +61,10 @@ class DontStarveTogetherConfig(object):
         ]
     }
 
-    def __init__(self, setting_file=None, server_token_file=None):
+    def __init__(self, setting_file=None, cluster_token_file=None):
         super(DontStarveTogetherConfig, self).__init__()
         self.setting_file = setting_file
-        self.server_token_file = server_token_file
+        self.cluster_token_file = cluster_token_file
         self.config = ConfigParser.ConfigParser()
 
         with open(self.setting_file, 'rb') as config_file:
@@ -95,7 +95,7 @@ class DontStarveTogetherConfig(object):
 
         cluster_token = self.get_cluster_token()
         if cluster_token:
-            with open(self.server_token_file, 'wb') as token_file:
+            with open(self.cluster_token_file, 'wb') as token_file:
                 token_file.write(cluster_token)
             self.config.set('account', 'dedicated_lan_server', 'false')
         else:
@@ -127,7 +127,7 @@ def prepare_game():
 
 def game_start():
     config = DontStarveTogetherConfig(setting_file=SETTING_FILE,
-                                      server_token_file=SERVER_TOKEN_FILE)
+                                      cluster_token_file=CLUSTER_TOKEN_FILE)
     config.do_config()
 
     subprocess.call([BIN_FILE], cwd=BIN_DIRECTORY)
