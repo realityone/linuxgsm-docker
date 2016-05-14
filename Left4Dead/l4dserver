@@ -4,7 +4,13 @@
 # Author: Daniel Gibbs
 # Contributor: Summit Singh Thakur
 # Website: http://gameservermanagers.com
-version="121215"
+if [ -f ".dev-debug" ]; then
+	exec 5>dev-debug.log
+	BASH_XTRACEFD="5"
+	set -x
+fi
+
+version="271215"
 
 #### Variables ####
 
@@ -49,7 +55,7 @@ engine="source"
 
 # Directories
 rootdir="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
-selfname=$(basename $(readlink -f "${BASH_SOURCE[0]}"))
+selfname="$(basename $(readlink -f "${BASH_SOURCE[0]}"))"
 lockselfname=".${servicename}.lock"
 filesdir="${rootdir}/serverfiles"
 systemdir="${filesdir}/left4dead"
@@ -101,7 +107,7 @@ if [ ! -f "${filepath}" ]; then
 	curl=$(curl --fail -o "${filepath}" "${githuburl}" 2>&1)
 	if [ $? -ne 0 ]; then
 		echo -e "\e[0;31mFAIL\e[0m\n"
-		echo "		${curl}"|grep "curl:"
+		echo "${curl}"
 		echo -e "${githuburl}\n"
 		exit
 	else
@@ -120,13 +126,13 @@ fn_runfunction(){
 	fn_getgithubfile "functions/${functionfile}" 1
 }
 
-fn_functions(){
-# Functions are defined in fn_functions.
+core_functions.sh(){
+# Functions are defined in core_functions.sh.
 functionfile="${FUNCNAME}"
 fn_runfunction
 }
 
-fn_functions
+core_functions.sh
 
 getopt=$1
-fn_getopt
+core_getopt.sh

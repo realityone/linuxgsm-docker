@@ -3,7 +3,13 @@
 # Server Management Script
 # Author: Daniel Gibbs
 # Website: http://gameservermanagers.com
-version="121215"
+if [ -f ".dev-debug" ]; then
+	exec 5>dev-debug.log
+	BASH_XTRACEFD="5"
+	set -x
+fi
+
+version="271215"
 
 #### Variables ####
 
@@ -19,15 +25,17 @@ steampass=""
 # Start Variables
 defaultmap="ministry"
 maxplayers="16"
+tickrate="64"
 port="27015"
 sourcetvport="27020"
 clientport="27005"
 ip="0.0.0.0"
 updateonstart="off"
+workshop="0"
 
 # https://developer.valvesoftware.com/wiki/Command_Line_Options#Source_Dedicated_Server
 fn_parms(){
-parms="-game insurgency -strictportbind -ip ${ip} -port ${port} +clientport ${clientport} +tv_port ${sourcetvport} +map ${defaultmap} +servercfgfile ${servercfg} -maxplayers ${maxplayers}"
+parms="-game insurgency -strictportbind -ip ${ip} -port ${port} +clientport ${clientport} +tv_port ${sourcetvport} -tickrate ${tickrate} +map ${defaultmap} +servercfgfile ${servercfg} -maxplayers ${maxplayers} +sv_workshop_enabled ${workshop}"
 }
 
 #### Advanced Variables ####
@@ -48,8 +56,8 @@ gamename="Insurgency"
 engine="source"
 
 # Directories
-rootdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-selfname="$(basename $0)"
+rootdir="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
+selfname="$(basename $(readlink -f "${BASH_SOURCE[0]}"))"
 lockselfname=".${servicename}.lock"
 filesdir="${rootdir}/serverfiles"
 systemdir="${filesdir}/insurgency"
@@ -101,7 +109,7 @@ if [ ! -f "${filepath}" ]; then
 	curl=$(curl --fail -o "${filepath}" "${githuburl}" 2>&1)
 	if [ $? -ne 0 ]; then
 		echo -e "\e[0;31mFAIL\e[0m\n"
-		echo "		${curl}"|grep "curl:"
+		echo "${curl}"
 		echo -e "${githuburl}\n"
 		exit
 	else
@@ -120,13 +128,13 @@ fn_runfunction(){
 	fn_getgithubfile "functions/${functionfile}" 1
 }
 
-fn_functions(){
-# Functions are defined in fn_functions.
+core_functions.sh(){
+# Functions are defined in core_functions.sh.
 functionfile="${FUNCNAME}"
 fn_runfunction
 }
 
-fn_functions
+core_functions.sh
 
 getopt=$1
-fn_getopt
+core_getopt.sh

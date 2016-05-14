@@ -96,7 +96,7 @@ class DontStarveTogetherConfig(object):
         cluster_token = self.get_cluster_token()
         if cluster_token:
             with open(self.server_token_file, 'wb') as token_file:
-                self.config.write(cluster_token)
+                token_file.write(cluster_token)
             self.config.set('account', 'dedicated_lan_server', 'false')
         else:
             self.config.set('account', 'dedicated_lan_server', 'true')
