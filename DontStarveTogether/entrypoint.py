@@ -16,6 +16,7 @@ KLEI_DIRECTORY = os.path.join(HOME, '.klei')
 SETTING_DIRECTORY = os.path.join(KLEI_DIRECTORY, GAME)
 
 SETTING_FILE = os.path.join(SETTING_DIRECTORY, 'settings.ini')
+SERVER_TOKEN_FILE = os.path.join(SETTING_DIRECTORY, 'server_token.ini')
 MANAGER_FILE = os.path.join(HOME, 'dstserver')
 BIN_DIRECTORY = os.path.join(HOME, 'serverfiles', 'bin')
 BIN_FILE = os.path.join(
@@ -48,7 +49,7 @@ class DontStarveTogetherConfig(object):
             'pause_when_empty'
         ],
         'account': [
-            'server_token'
+            # 'server_token'
             # 'dedicated_lan_server'
         ],
         'STEAM': [
@@ -60,9 +61,10 @@ class DontStarveTogetherConfig(object):
         ]
     }
 
-    def __init__(self, setting_file):
+    def __init__(self, setting_file=None, server_token_file=None):
         super(DontStarveTogetherConfig, self).__init__()
         self.setting_file = setting_file
+        self.server_token_file = server_token_file
         self.config = ConfigParser.ConfigParser()
 
         with open(self.setting_file, 'rb') as config_file:
@@ -71,8 +73,8 @@ class DontStarveTogetherConfig(object):
     def get_password(self):
         return os.environ.get('SERVER_PASSWORD')
 
-    def get_server_token(self):
-        return os.environ.get('SERVER_TOKEN')
+    def get_cluster_token(self):
+        return os.environ.get('CLUSTER_TOKEN')
 
     def do_config(self):
         for section, options in self.CONFIGS.iteritems():
@@ -91,7 +93,10 @@ class DontStarveTogetherConfig(object):
             )
             self.config.remove_option('network', 'server_password')
 
-        if self.get_server_token():
+        cluster_token = self.get_cluster_token()
+        if cluster_token:
+            with open(self.server_token_file, 'wb') as token_file:
+                self.config.write(cluster_token)
             self.config.set('account', 'dedicated_lan_server', 'false')
         else:
             self.config.set('account', 'dedicated_lan_server', 'true')
@@ -121,7 +126,8 @@ def prepare_game():
 
 
 def game_start():
-    config = DontStarveTogetherConfig(SETTING_FILE)
+    config = DontStarveTogetherConfig(setting_file=SETTING_FILE,
+                                      server_token_file=SERVER_TOKEN_FILE)
     config.do_config()
 
     subprocess.call([BIN_FILE], cwd=BIN_DIRECTORY)
